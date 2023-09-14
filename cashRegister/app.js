@@ -16,6 +16,7 @@ CashRegister.prototype = {
         "twenty": 20,
         "one hundred": 100
     },
+    result: { status: "OPEN", change: [] },
     getCurrencies: function () {
         return this.currencies
     },
@@ -51,10 +52,16 @@ CashRegister.prototype = {
             if (element[0] === unitLimit) { founds += element[1]; break; }
             else { founds += element[1] }
         }
-
-        return (founds > this.change) ? true : false;
+        if (founds === this.change) {
+            this.result.status = "CLOSED";
+        }
+        return (founds >= this.change) ? true : false;
     },
     giveChange: function () {
+        if (this.result.status === "CLOSED") {
+            this.result.change = [...this.cid];
+            return this.result;
+        }
         const cidRever = this.cid.reverse()
         let keyIndex;
         let maxUnit = this.getMaxUnitChange()
@@ -63,7 +70,6 @@ CashRegister.prototype = {
                 keyIndex = idx;
             }
         });
-        let result = { status: "OPEN", change: [] };
         let updateChange = 0;
         let remainder = this.change;
 
@@ -74,14 +80,14 @@ CashRegister.prototype = {
             if (aux < this.change) {
                 updateChange = aux;
                 remainder = this.change - updateChange;
-                result.change.push([...element])
+                this.result.change.push([...element])
             } else {
                 aux = parseInt(remainder / baseValue) * baseValue;
                 updateChange += aux;
                 remainder = this.change - updateChange;
                 remainder = remainder.toFixed(2);
                 if (aux) {
-                    result.change.push([element[0], aux])
+                    this.result.change.push([element[0], aux])
                 }
             }
             if (remainder === parseFloat(0)) {
@@ -89,7 +95,7 @@ CashRegister.prototype = {
             }
 
         }
-        return result;
+        return this.result;
     }
 }
 
@@ -104,5 +110,3 @@ function checkCashRegister(price, cash, cid) {
         return cashReg.giveChange()
     }
 }
-
-checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]])
