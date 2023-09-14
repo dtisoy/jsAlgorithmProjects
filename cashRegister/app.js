@@ -53,6 +53,43 @@ CashRegister.prototype = {
         }
 
         return (founds > this.change) ? true : false;
+    },
+    giveChange: function () {
+        const cidRever = this.cid.reverse()
+        let keyIndex;
+        let maxUnit = this.getMaxUnitChange()
+        cidRever.forEach((array, idx) => {
+            if (maxUnit === array[0]) {
+                keyIndex = idx;
+            }
+        });
+        let result = { status: "OPEN", change: [] };
+        let updateChange = 0;
+        let remainder = this.change;
+
+        for (keyIndex; keyIndex < cidRever.length; keyIndex++) {
+            const element = cidRever[keyIndex];
+            let baseValue = this.getCurrencies()[element[0].toLowerCase()];
+            let aux = updateChange + element[1]
+            if (aux < this.change) {
+                updateChange = aux;
+                remainder = this.change - updateChange;
+                result.change.push([...element])
+            } else {
+                aux = parseInt(remainder / baseValue) * baseValue;
+                updateChange += aux;
+                remainder = this.change - updateChange;
+                remainder = remainder.toFixed(2);
+                if (aux) {
+                    result.change.push([element[0], aux])
+                }
+            }
+            if (remainder === parseFloat(0)) {
+                break;
+            }
+
+        }
+        return result;
     }
 }
 
@@ -63,7 +100,9 @@ function checkCashRegister(price, cash, cid) {
     let cashReg = new CashRegister(cid, change)
     if (!(cashReg.getEnoughFounds())) {
         return { status: "INSUFFICIENT_FUNDS", change: [] }
+    } else {
+        return cashReg.giveChange()
     }
-    return change;
 }
 
+checkCashRegister(19.5, 20, [["PENNY", 1.01], ["NICKEL", 2.05], ["DIME", 3.1], ["QUARTER", 4.25], ["ONE", 90], ["FIVE", 55], ["TEN", 20], ["TWENTY", 60], ["ONE HUNDRED", 100]])
