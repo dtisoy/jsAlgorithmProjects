@@ -17,15 +17,15 @@ CashRegister.prototype = {
         "one hundred": 100
     },
     // default result
-    result: { status: "OPEN", change: [] },
+    result: { status: "INSUFFICIENT_FUNDS", change: [] },
     getCurrencies: function () {
         return this.currencies
     },
     getMaxUnitChange: function () {
         // return the max currencie unit to give a change
-        let cur = this.getCurrencies()
+        let cur = this.getCurrencies();
         // values from larger to shortest
-        const cValues = Object.values(cur).reverse()
+        const cValues = Object.values(cur).reverse();
 
         let maxValue;
 
@@ -40,7 +40,7 @@ CashRegister.prototype = {
         // return the key of the max value
         for (const key in cur) {
             if (cur[key] === maxValue) {
-                return key.toUpperCase()
+                return key.toUpperCase();
             }
         }
 
@@ -63,15 +63,24 @@ CashRegister.prototype = {
         return (founds >= this.change) ? true : false;
     },
     giveChange: function () {
+        // first check and update status
+        const checkFounds = this.getEnoughFounds()
         // status close we should return all the cid
         if (this.result.status === "CLOSED") {
             this.result.change = [...this.cid];
             return this.result;
+        } else if (!(checkFounds)) {
+            // not enought founds return the default result
+            return this.result;
         }
 
-        const cidRever = this.cid.reverse()
+        // no closed or there's enough founds
+        // update the status
+        this.result.status = "OPEN";
+
+        const cidRever = this.cid.reverse();
         let keyIndex;
-        let maxUnit = this.getMaxUnitChange()
+        let maxUnit = this.getMaxUnitChange();
         let updateChange = 0;
         let remainder = this.change;
 
@@ -88,7 +97,7 @@ CashRegister.prototype = {
             // get the value of a cash. Example 1 -> one dollar
             let baseValue = this.getCurrencies()[element[0].toLowerCase()];
 
-            let aux = updateChange + element[1]
+            let aux = updateChange + element[1];
             if (aux < this.change) {
                 /*
                 take all of the current money if 
@@ -97,7 +106,7 @@ CashRegister.prototype = {
                 updateChange = aux;
                 remainder = this.change - updateChange;
                 // update the result change with the correct format
-                this.result.change.push([...element])
+                this.result.change.push([...element]);
             } else {
                 // the money avaibla is more than we need
                 // just take what is needed
@@ -109,7 +118,7 @@ CashRegister.prototype = {
                     /* aux is added to the result
                     cause aux is what are actually taking 
                     from the current money*/
-                    this.result.change.push([element[0], aux])
+                    this.result.change.push([element[0], aux]);
                 }
             }
             // finish if we already have all the change due
@@ -124,12 +133,15 @@ CashRegister.prototype = {
 
 
 function checkCashRegister(price, cash, cid) {
+
     let change = cash - price;
 
-    let cashReg = new CashRegister(cid, change)
-    if (!(cashReg.getEnoughFounds())) {
-        return { status: "INSUFFICIENT_FUNDS", change: [] }
-    } else {
-        return cashReg.giveChange()
-    }
+    let cashReg = new CashRegister(cid, change);
+
+    return cashReg.giveChange();
+
 }
+
+let l = checkCashRegister(19.5, 20, [["PENNY", 0.5], ["NICKEL", 0], ["DIME", 0], ["QUARTER", 0], ["ONE", 0], ["FIVE", 0], ["TEN", 0], ["TWENTY", 0], ["ONE HUNDRED", 0]])
+
+console.log(l)
